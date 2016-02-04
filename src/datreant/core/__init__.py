@@ -17,7 +17,7 @@ _LIMBS = dict()
 _AGGLIMBS = dict()
 
 # Bring some often used objects into the current namespace
-from .treants import Treant, Group
+from .treants import Treant
 from .collections import Bundle
 from . import attach
 

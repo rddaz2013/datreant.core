@@ -10,7 +10,7 @@ import warnings
 from functools import wraps
 
 
-def treantfile(filename, logger=None, **kwargs):
+def treantfile(filename, **kwargs):
     """Generate or regenerate the appropriate treant file instance from
     filename.
 
@@ -18,8 +18,6 @@ def treantfile(filename, logger=None, **kwargs):
         *filename*
             path to state file (existing or to be created), including the
             filename
-        *logger*
-            logger instance to pass to treant file instance
 
     **kwargs passed to treant file ``__init__()`` method
 
@@ -40,12 +38,7 @@ def treantfile(filename, logger=None, **kwargs):
     if not treant:
         raise IOError("No known treant type for file '{}'".format(filename))
 
-    statefileclass = _TREANTS[treant]._backendclass
-
-    if not statefileclass:
-        raise IOError("No known backend type for file '{}'".format(filename))
-
-    return statefileclass(filename, logger=logger, **kwargs)
+    return JSONFile(filename, **kwargs)
 
 
 class File(object):
@@ -54,7 +47,7 @@ class File(object):
 
     """
 
-    def __init__(self, filename, logger=None, **kwargs):
+    def __init__(self, filename, **kwargs):
         """Create File instance for interacting with file on disk.
 
         All files in datreant should be accessible by high-level methods
@@ -67,16 +60,12 @@ class File(object):
         :Arguments:
             *filename*
                 name of file on disk object corresponds to
-            *logger*
-                logger to send warnings and errors to
 
         """
         self.filename = os.path.abspath(filename)
         self.handle = None
         self.fd = None
         self.fdlock = None
-
-        self._start_logger(logger)
 
         # we apply locks to a proxy file to avoid creating an HDF5 file
         # without an exclusive lock on something; important for multiprocessing
@@ -105,32 +94,6 @@ class File(object):
 
         """
         return os.path.dirname(self.filename)
-
-    def _start_logger(self, logger):
-        """Start up the logger.
-
-        """
-        # delete current logger
-        try:
-            del self.logger
-        except AttributeError:
-            pass
-
-        # log to standard out if no logger given
-        if not logger:
-            self.logger = logging.getLogger(
-                '{}'.format(self.__class__.__name__))
-            self.logger.setLevel(logging.INFO)
-
-            if not any([isinstance(x, logging.StreamHandler)
-                        for x in self.logger.handlers]):
-                ch = logging.StreamHandler(sys.stdout)
-                cf = logging.Formatter(
-                        '%(name)-12s: %(levelname)-8s %(message)s')
-                ch.setFormatter(cf)
-                self.logger.addHandler(ch)
-        else:
-            self.logger = logger
 
     def _shlock(self, fd):
         """Get shared lock on file.
@@ -432,3 +395,12 @@ class FileSerial(File):
         Override with specific code for serializing *state* to *handle*.
         """
         raise NotImplementedError
+
+
+class JSONFile(FileSerial):
+    def _deserialize(self, handle):
+        return json.load(handle)
+
+    def _serialize(self, state, handle):
+        json.dump(state, handle)
+

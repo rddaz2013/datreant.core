@@ -234,31 +234,6 @@ class TestTreant:
                 treant.categories['hello?']
 
 
-class TestGroup(TestTreant):
-    """Test Group-specific features.
-
-    """
-    treantname = 'testgroup'
-    treanttype = 'Group'
-    treantclass = dtr.Group
-
-    @pytest.fixture
-    def treant(self, tmpdir):
-        with tmpdir.as_cwd():
-            g = dtr.Group(TestGroup.treantname)
-        return g
-
-    def test_repr(self, treant):
-        pass
-
-    class TestMembers(test_bundle.CollectionTests):
-        """Test member functionality"""
-
-        @pytest.fixture
-        def collection(self, treant):
-            return treant.members
-
-
 class TestReadOnly:
     """Test Treant functionality when read-only"""
 
@@ -267,20 +242,6 @@ class TestReadOnly:
         with tmpdir.as_cwd():
             c = dtr.treants.Treant('testtreant')
             c.tags.add('72')
-            py.path.local(c.basedir).chmod(0o0550, rec=True)
-
-        def fin():
-            py.path.local(c.basedir).chmod(0o0770, rec=True)
-
-        request.addfinalizer(fin)
-
-        return c
-
-    @pytest.fixture
-    def group(self, tmpdir, request):
-        with tmpdir.as_cwd():
-            c = dtr.Group('testgroup')
-            c.members.add(dtr.Treant('lark'), dtr.Group('bark'))
             py.path.local(c.basedir).chmod(0o0550, rec=True)
 
         def fin():
@@ -299,19 +260,3 @@ class TestReadOnly:
 
         with pytest.raises(OSError):
             c.tags.add('yet another')
-
-    def test_group_member_access(self, group):
-        """Test that Group can access members when the Group is read-only.
-        """
-        assert len(group.members) == 2
-
-    def test_group_moved_member_access(self, group, tmpdir):
-        """Test that Group can access members when the Group is read-only,
-        and when a member has been moved since the Group was last used with
-        write-permissions.
-        """
-        with tmpdir.as_cwd():
-            t = dtr.Treant('lark')
-            t.location = 'somewhere/else'
-
-        assert len(group.members) == 2

@@ -22,13 +22,28 @@ from . import filesystem
 from . import _LIMBS, _AGGLIMBS
 
 
-class CollectionBase(object):
-    """Common interface elements for ordered sets of Treants.
-
-    :class:`datreant.limbs.Members` and :class:`Bundle` both use this
-    interface.
+class Bundle(object):
+    """An indexable set of treants.
 
     """
+    def __init__(self, *treants, **kwargs):
+        """Generate a Bundle from any number of Treants.
+
+        :Arguments:
+            *treants*
+                treants to be added, which may be nested lists of treants;
+                treants can be given as either objects or paths to directories
+                that contain treant statefiles; glob patterns are also allowed,
+                and all found treants will be added to the collection
+        """
+        self._state = list()
+        self._cache = dict()
+
+        self.add(*treants)
+
+    def __repr__(self):
+        return "<Bundle({})>".format(self._list())
+
     def __len__(self):
         return len(self._list())
 
@@ -108,7 +123,6 @@ class CollectionBase(object):
                 that contain treant statefiles; glob patterns are also allowed,
                 and all found treants will be added to the collection
         """
-        from .limbs import Members
         from .treants import Treant
 
         outconts = list()
@@ -130,10 +144,15 @@ class CollectionBase(object):
                     outconts.append(t)
 
         for treant in outconts:
-            self._backend.add_member(treant.uuid,
-                                     treant.treanttype,
-                                     treant.basedir)
-
+            # check if uuid already present
+            uuids = [member['uuid'] for member in self._state]
+    
+            if uuid not in uuids:
+                self._state.append({
+                    'uuid': treant.uuid,
+                    'treanttype': treant.treanttype,
+                    'abspath': os.path.abspath(treant.basedir)})
+    
     def remove(self, *members):
         """Remove any number of members from the collection.
 
@@ -144,7 +163,8 @@ class CollectionBase(object):
         """
         from .treants import Treant
 
-        uuids = self._backend.get_members_uuid()
+        uuids = self.uuids
+
         remove = list()
         for member in members:
             if isinstance(member, int):
@@ -160,7 +180,24 @@ class CollectionBase(object):
             else:
                 raise TypeError('Only an integer or treant acceptable')
 
-        self._backend.del_members(remove)
+        # remove redundant uuids from given list if present
+        uuids = set([str(uuid) for uuid in uuids])
+
+        # get matching rows
+        # TODO: possibly faster to use table.where
+        memberlist = list()
+        for i, member in enumerate(self._state):
+            for uuid in uuids:
+                if (member['uuid'] == uuid):
+                    memberlist.append(i)
+
+        memberlist.sort()
+        j = 0
+        # delete matching entries; have to use j to shift the register as
+        # we remove entries
+        for i in memberlist:
+            self._state.pop(i - j)
+            j = j + 1
 
         # remove from cache
         for uuid in remove:
@@ -170,14 +207,14 @@ class CollectionBase(object):
         """Remove all members.
 
         """
-        self._backend.del_members(all=True)
+        self._state = list()
 
     @property
     def treanttypes(self):
         """Return a list of member treanttypes.
 
         """
-        return self._backend.get_members_treanttype()
+        return [member['treanttype'] for member in self._state]
 
     @property
     def names(self):
@@ -244,7 +281,7 @@ class CollectionBase(object):
                 list giving the uuid of each member, in order
 
         """
-        return self._backend.get_members_uuid()
+        return [member['uuid'] for member in self._state]
 
     def _list(self):
         """Return a list of members.
@@ -256,7 +293,12 @@ class CollectionBase(object):
         not intended for user-level use.
 
         """
-        members = self._backend.get_members()
+        members = defaultdict(list)
+
+        for member in self._state:
+            for key in self.fields:
+                members[key].append(member[key])
+
         uuids = members['uuid']
 
         findlist = list()
@@ -343,170 +385,3 @@ class CollectionBase(object):
             results = None
 
         return results
-
-
-class _BundleBackend():
-    """Backend class for Bundle.
-
-    Has same interface as Group-specific components of
-    :class:`backends.GroupFile`. Behaves practically like an in-memory
-    version of a state-file, but with only the components needed for the
-    Bundle.
-
-    """
-    memberpaths = ['abspath']
-    fields = ['uuid', 'treanttype']
-    fields.extend(memberpaths)
-
-    def __init__(self):
-        self.record = list()
-
-    def add_member(self, uuid, treanttype, basedir):
-        """Add a member to the Bundle.
-
-        If the member is already present, its location will be updated with
-        the given location.
-
-        :Arguments:
-            *uuid*
-                the uuid of the new member
-            *treanttype*
-                the treant type of the new member
-            *basedir*
-                basedir of the new member in the filesystem
-
-        """
-        # check if uuid already present
-        uuids = [member['uuid'] for member in self.record]
-
-        if uuid not in uuids:
-            self.record.append({'uuid': uuid,
-                                'treanttype': treanttype,
-                                'abspath': os.path.abspath(basedir)})
-
-    def del_members(self, uuids, all=False):
-        """Remove members from the Bundle.
-
-        :Arguments:
-            *uuids*
-                An iterable of uuids of the members to remove
-            *all*
-                When True, remove all members [``False``]
-
-        """
-        if all:
-            self.record = list()
-        else:
-            # remove redundant uuids from given list if present
-            uuids = set([str(uuid) for uuid in uuids])
-
-            # get matching rows
-            # TODO: possibly faster to use table.where
-            memberlist = list()
-            for i, member in enumerate(self.record):
-                for uuid in uuids:
-                    if (member['uuid'] == uuid):
-                        memberlist.append(i)
-
-            memberlist.sort()
-            j = 0
-            # delete matching entries; have to use j to shift the register as
-            # we remove entries
-            for i in memberlist:
-                self.record.pop(i - j)
-                j = j + 1
-
-    def get_member(self, uuid):
-        """Get all stored information on the specified member.
-
-        Returns a dictionary whose keys are column names and values the
-        corresponding values for the member.
-
-        :Arguments:
-            *uuid*
-                uuid of the member to retrieve information for
-
-        :Returns:
-            *memberinfo*
-                a dictionary containing all information stored for the
-                specified member
-        """
-        memberinfo = None
-        for member in self.record:
-            if member['uuid'] == uuid:
-                memberinfo = member
-
-        return memberinfo
-
-    def get_members(self):
-        """Get full member table.
-
-        Sometimes it is useful to read the whole member table in one go instead
-        of doing multiple reads.
-
-        :Returns:
-            *memberdata*
-                dict giving full member data, with fields as keys and in member
-                order
-        """
-        out = defaultdict(list)
-
-        for member in self.record:
-            for key in self.fields:
-                out[key].append(member[key])
-
-        return out
-
-    def get_members_uuid(self):
-        """List uuid for each member.
-
-        :Returns:
-            *uuids*
-                list giving treanttype of each member, in order
-        """
-        return [member['uuid'] for member in self.record]
-
-    def get_members_treanttype(self):
-        """List treanttype for each member.
-
-        :Returns:
-            *treanttypes*
-                list giving treanttype of each member, in order
-        """
-        return [member['treanttype'] for member in self.record]
-
-    def get_members_basedir(self):
-        """List basedir for each member.
-
-        :Returns:
-            *basedirs*
-                list containing all paths to member basedirs, in member order
-        """
-        return [member['abspath'] for member in self.record]
-
-
-class Bundle(CollectionBase):
-    """Non-persistent collection of treants.
-
-    A Bundle is basically an indexable set. It is often used to return the
-    results of a query on a  Group, but can be used on its own as well.
-
-    """
-
-    def __init__(self, *treants, **kwargs):
-        """Generate a Bundle from any number of Treants.
-
-        :Arguments:
-            *treants*
-                treants to be added, which may be nested lists of treants;
-                treants can be given as either objects or paths to directories
-                that contain treant statefiles; glob patterns are also allowed,
-                and all found treants will be added to the collection
-        """
-        self._backend = _BundleBackend()
-        self._cache = dict()
-
-        self.add(*treants)
-
-    def __repr__(self):
-        return "<Bundle({})>".format(self._list())

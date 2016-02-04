@@ -52,7 +52,7 @@ class Tags(Limb):
                 except KeyError:
                     self._treant._state['tags'] = list()
         except (IOError, OSError):
-            with self._treant.read():
+            with self._treant._read():
                 try:
                     self._treant._state['tags']
                 except KeyError:
@@ -116,7 +116,7 @@ class Tags(Limb):
             else:
                 outtags.append(tag)
 
-        with self._write():
+        with self._treant._write():
             # ensure tags are unique (we don't care about order)
             # also they must be of a certain set of types
             tags = set([tag for tag in outtags
@@ -140,7 +140,7 @@ class Tags(Limb):
             *tags*
                 Tags to delete.
         """
-        with self._write():
+        with self._treant._write():
             # remove redundant tags from given list if present
             tags = set([str(tag) for tag in tags])
             for tag in tags:
@@ -154,7 +154,7 @@ class Tags(Limb):
         """Remove all tags from Treant.
 
         """
-        with self._write():
+        with self._treant._write():
             self._state['tags'] = list()
 
 
@@ -177,7 +177,7 @@ class Categories(Limb):
                 except KeyError:
                     self._treant._state['categories'] = dict()
         except (IOError, OSError):
-            with self._treant.read():
+            with self._treant._read():
                 try:
                     self._treant._state['categories']
                 except KeyError:
@@ -279,7 +279,7 @@ class Categories(Limb):
 
         outcats.update(categories)
 
-        with self._write():
+        with self._treant._write():
             for key, value in outcats.items():
                 if (isinstance(value, (int, float, string_types, bool)) or
                         value is None):
@@ -298,7 +298,7 @@ class Categories(Limb):
         """
         self._backend.del_categories(categories)
 
-        with self._write():
+        with self._treant._write():
             for key in categories:
                 # continue even if key not already present
                 self._state['categories'].pop(key, None)
@@ -307,7 +307,7 @@ class Categories(Limb):
         """Remove all categories from Treant.
 
         """
-        with self._write():
+        with self._treant._write():
             self._state['categories'] = dict()
 
     def keys(self):
@@ -329,36 +329,3 @@ class Categories(Limb):
         """
         with self._read():
             return self._state['categories'].values()
-
-
-class Members(Limb, collections.CollectionBase):
-    """Member manager for Groups.
-
-    """
-    _name = 'members'
-
-    def __init__(self, treant):
-        super(Members, self).__init__(treant)
-        self._cache = dict()
-
-    def __repr__(self):
-        return "<Members({})>".format(self._list())
-
-    def __str__(self):
-        names = self.names
-        treanttypes = self.treanttypes
-        agg = "Members"
-        majsep = "="
-        seplength = len(agg)
-
-        if not names:
-            out = "No Members"
-        else:
-            out = agg + '\n'
-            out = out + majsep * seplength + '\n'
-            for i, name, treanttype in zip(xrange(len(names)),
-                                           names,
-                                           treanttypes):
-                out = out + "{}\t{}:\t{}\n".format(i, treanttype, name)
-
-        return out
