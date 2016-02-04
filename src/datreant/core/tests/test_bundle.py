@@ -18,49 +18,31 @@ def return_nothing(cont):
 class CollectionTests():
     """Tests for common elements of Group.members and Bundle"""
 
-    @pytest.fixture
-    def testtreant(self, tmpdir, request):
-        with tmpdir.as_cwd():
-            t = dtr.Treant('dummytreant')
-        return t
-
-    @pytest.fixture
-    def testgroup(self, tmpdir, request):
-        with tmpdir.as_cwd():
-            g = dtr.Group('dummygroup')
-            g.members.add(dtr.Treant('bark'), dtr.Treant('leaf'))
-        return g
-
-    def test_additive(self, tmpdir, testtreant, testgroup, collection):
+    def test_additive(self, tmpdir, collection):
         """Test that addition of treants and collections give Bundles.
 
         """
         with tmpdir.as_cwd():
-            assert isinstance(testtreant + testgroup, dtr.Bundle)
-            assert len(testtreant + testgroup) == 2
+            t1 = dtr.Treant('lark')
+            t2 = dtr.Treant('hark')
+            t3 = dtr.Treant('linus')
+            assert isinstance(t1 + t2, dtr.Bundle)
+            assert len(t1 + t2) == 2
 
-            # subtle, but important; Group.members is a collection,
-            # while Group is a treant
-            assert len(testtreant + testgroup.members) != 2
-            assert (len(testtreant + testgroup.members) ==
-                    len(testgroup.members) + 1)
+            collection.add(t1, t2)
 
-            assert isinstance(testtreant + testgroup.members, dtr.Bundle)
+            b = collection + t1 + t2 + t3
 
-            b = collection + testtreant + testgroup
-
-            # beating a dead horse
-            assert len(b) == 2
-            assert (len(b + testgroup.members) ==
-                    len(b) + len(testgroup.members))
-            assert isinstance(b + testgroup.members, dtr.Bundle)
-
+            # bundles work like ordered sets
+            assert len(b) == 3
+            assert len(b + collection) == len(b)
+                    
     def test_add_members(self, collection, tmpdir):
         """Try adding members in a number of ways"""
         with tmpdir.as_cwd():
             s1 = dtr.Treant('lark')
             s2 = dtr.Treant('hark')
-            g3 = dtr.Group('linus')
+            g3 = dtr.Treant('linus')
 
             collection.add(s1, [g3, s2])
 
@@ -80,7 +62,7 @@ class CollectionTests():
         with tmpdir.as_cwd():
             t1 = dtr.Treant('lark')
             t2 = dtr.Treant('hark')
-            g3 = dtr.Group('linus')
+            g3 = dtr.Treant('linus')
 
             collection.add('*ark')
 
@@ -93,7 +75,7 @@ class CollectionTests():
         """Access members with indexing and slicing"""
         with tmpdir.as_cwd():
             s1 = dtr.Treant('larry')
-            g2 = dtr.Group('curly')
+            g2 = dtr.Treant('curly')
             s3 = dtr.Treant('moe')
 
             collection.add([[[s1, [g2, [s3]]]]])
@@ -112,7 +94,7 @@ class CollectionTests():
     def test_remove_members(self, collection, tmpdir):
         """Try removing members"""
         with tmpdir.as_cwd():
-            g1 = dtr.Group('lion-o')
+            g1 = dtr.Treant('lion-o')
             s2 = dtr.Treant('cheetara')
             s3 = dtr.Treant('snarf')
 
@@ -133,7 +115,7 @@ class CollectionTests():
             t1 = dtr.Treant('lark')
             t2 = dtr.Treant('elsewhere/lark')
             t3 = dtr.Treant('hark')
-            g = dtr.Group('linus')
+            g = dtr.Treant('linus')
 
             stuff = [t1, t2, t3, g]
 
@@ -168,7 +150,7 @@ class CollectionTests():
         """Get member uuids, names, and treanttypes"""
         with tmpdir.as_cwd():
             c1 = dtr.treants.Treant('bigger')
-            g2 = dtr.Group('faster')
+            g2 = dtr.Treant('faster')
             s3 = dtr.Treant('stronger')
 
         collection.add(c1, g2, s3)
@@ -186,7 +168,7 @@ class CollectionTests():
         with tmpdir.as_cwd():
             s1 = dtr.Treant('lark')
             s2 = dtr.Treant('hark')
-            g3 = dtr.Group('linus')
+            g3 = dtr.Treant('linus')
 
         collection.add(s1, s2, g3)
 

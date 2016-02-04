@@ -9,13 +9,12 @@ from uuid import uuid4
 import logging
 import functools
 import six
-from contextlib import contextmanager
 
 from . import limbs
 from . import filesystem
 from . import collections
 
-from .backends.core import treantfile
+from .backends.statefiles import treantfile
 
 from . import _TREANTS
 from . import _LIMBS
@@ -121,20 +120,13 @@ class Treant(six.with_metaclass(_Treantmeta, object)):
     def _state(self):
         return self._backend._state
 
-    @contextmanager
+    @property
     def _read(self):
-        self._backend._apply_shared_lock()
-        self._backend._pull_state()
-        yield
-        self._backend._release_lock()
+        return self._backend.read()
 
-    @contextmanager
+    @property
     def _write(self):
-        self._backend._apply_exclusive_lock()
-        self._backend._pull_state()
-        yield
-        self._backend._push_state()
-        self._backend._release_lock()
+        return self._backend.write()
 
     def __repr__(self):
         return "<Treant: '{}'>".format(self.name)
@@ -161,8 +153,8 @@ class Treant(six.with_metaclass(_Treantmeta, object)):
         """Addition of treants with collections or treants yields Bundle.
 
         """
-        if (isinstance(a, (Treant, collections.CollectionBase)) and
-           isinstance(b, (Treant, collections.CollectionBase))):
+        if (isinstance(a, (Treant, collections.Bundle)) and
+           isinstance(b, (Treant, collections.Bundle))):
             return collections.Bundle(a, b)
         else:
             raise TypeError("Operands must be Treant-derived or Bundles.")
@@ -195,9 +187,6 @@ class Treant(six.with_metaclass(_Treantmeta, object)):
         # generate state file
         self._backend = treantfile(statefile)
 
-        import pdb
-        pdb.set_trace()
-
         # add categories, tags
         self.categories.add(categories)
         self.tags.add(tags)
@@ -220,8 +209,13 @@ class Treant(six.with_metaclass(_Treantmeta, object)):
             # if only one state file, load it; otherwise, complain loudly
             if len(statefile) == 1:
                 self._backend = treantfile(statefile[0])
-                self.categories.add(categories)
-                self.tags.add(tags)
+                # try to add categories, tags
+                try:
+                    self.categories.add(categories)
+                    self.tags.add(tags)
+                except (OSError, IOError):
+                    pass
+
             elif len(statefile) == 0:
                 raise NoTreantsError('No Treants found in directory.')
             else:
@@ -232,8 +226,12 @@ class Treant(six.with_metaclass(_Treantmeta, object)):
         # if a state file is given, try loading it
         elif os.path.exists(treant):
             self._backend = treantfile(treant)
-            self.categories.add(categories)
-            self.tags.add(tags)
+            # try to add categories, tags
+            try:
+                self.categories.add(categories)
+                self.tags.add(tags)
+            except (OSError, IOError):
+                pass
         else:
             raise NoTreantsError('No Treants found in path.')
 

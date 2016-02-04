@@ -26,6 +26,10 @@ class Bundle(object):
     """An indexable set of treants.
 
     """
+    _fields = ['uuid', 'treanttype']
+    _memberpaths = ['abspath']
+    _fields.extend(_memberpaths)
+
     def __init__(self, *treants, **kwargs):
         """Generate a Bundle from any number of Treants.
 
@@ -64,8 +68,8 @@ class Bundle(object):
         """
         from .treants import Treant
 
-        if (isinstance(a, (Treant, CollectionBase)) and
-                isinstance(b, (Treant, CollectionBase))):
+        if (isinstance(a, (Treant, Bundle)) and
+                isinstance(b, (Treant, Bundle))):
             return Bundle(a, b)
         else:
             raise TypeError("Operands must be Treant-derived or Bundles.")
@@ -130,7 +134,7 @@ class Bundle(object):
             if treant is None:
                 pass
             elif isinstance(treant,
-                            (list, tuple, CollectionBase)):
+                            (list, tuple, Bundle)):
                 self.add(*treant)
             elif isinstance(treant, Treant):
                 outconts.append(treant)
@@ -147,7 +151,7 @@ class Bundle(object):
             # check if uuid already present
             uuids = [member['uuid'] for member in self._state]
     
-            if uuid not in uuids:
+            if treant.uuid not in uuids:
                 self._state.append({
                     'uuid': treant.uuid,
                     'treanttype': treant.treanttype,
@@ -296,7 +300,7 @@ class Bundle(object):
         members = defaultdict(list)
 
         for member in self._state:
-            for key in self.fields:
+            for key in self._fields:
                 members[key].append(member[key])
 
         uuids = members['uuid']
@@ -313,7 +317,7 @@ class Bundle(object):
 
         # track down our non-cached treants
         paths = {path: members[path]
-                 for path in self._backend.memberpaths}
+                 for path in self._memberpaths}
         foxhound = filesystem.Foxhound(self, findlist, paths)
         foundconts = foxhound.fetch(as_treants=True)
 

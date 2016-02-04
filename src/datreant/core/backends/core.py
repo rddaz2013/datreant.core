@@ -7,38 +7,9 @@ import sys
 import fcntl
 import logging
 import warnings
+import json
 from functools import wraps
-
-
-def treantfile(filename, **kwargs):
-    """Generate or regenerate the appropriate treant file instance from
-    filename.
-
-    :Arguments:
-        *filename*
-            path to state file (existing or to be created), including the
-            filename
-
-    **kwargs passed to treant file ``__init__()`` method
-
-    :Returns:
-        *treantfile*
-            treantfile instance attached to the given file
-
-    """
-    from .. import _TREANTS
-
-    treant = None
-    basename = os.path.basename(filename)
-    for treanttype in _TREANTS:
-        if treanttype in basename:
-            treant = treanttype
-            break
-
-    if not treant:
-        raise IOError("No known treant type for file '{}'".format(filename))
-
-    return JSONFile(filename, **kwargs)
+from contextlib import contextmanager
 
 
 class File(object):
@@ -318,7 +289,6 @@ class FileSerial(File):
 
         return out 
 
-    @staticmethod
     def _read(func):
         """Decorator for applying a shared lock on file and reading contents.
 
@@ -342,7 +312,36 @@ class FileSerial(File):
 
         return inner
 
-    @staticmethod
+    @contextmanager
+    def read(self):
+        # if we already have any lock, proceed
+        if self.fdlock:
+            yield self._state
+        else:
+            self._apply_shared_lock()
+            try:
+                self._pull_state()
+                yield self._state
+            finally:
+                self._release_lock()
+
+    @contextmanager
+    def write(self):
+        # if we already have an exclusive lock, proceed
+        if self.fdlock == 'exclusive':
+            yield self._state
+        else:
+            self._apply_exclusive_lock()
+            try:
+                self._pull_state()
+            except IOError:
+                self._init_state()
+            try: 
+                yield self._state
+                self._push_state()
+            finally:
+                self._release_lock()
+
     def _write(func):
         """Decorator for applying an exclusive lock on file and modifying
         contents.
@@ -403,4 +402,3 @@ class JSONFile(FileSerial):
 
     def _serialize(self, state, handle):
         json.dump(state, handle)
-
