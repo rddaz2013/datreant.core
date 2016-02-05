@@ -13,6 +13,8 @@ import six
 from . import limbs
 from . import filesystem
 from . import collections
+from .util import makedirs
+from .trees import TreeMixin, Tree
 
 from .backends.statefiles import treantfile
 
@@ -37,7 +39,7 @@ class _Treantmeta(type):
 
 
 @functools.total_ordering
-class Treant(six.with_metaclass(_Treantmeta, object)):
+class Treant(six.with_metaclass(_Treantmeta, TreeMixin)):
     """Core class for all Treants.
 
     """
@@ -172,7 +174,7 @@ class Treant(six.with_metaclass(_Treantmeta, object)):
 
         # build basedir; stop if we hit a permissions error
         try:
-            self._makedirs(treant)
+            makedirs(treant)
         except OSError as e:
             if e.errno == 13:
                 raise OSError(13, "Permission denied; " +
@@ -234,23 +236,6 @@ class Treant(six.with_metaclass(_Treantmeta, object)):
                 pass
         else:
             raise NoTreantsError('No Treants found in path.')
-
-    def _makedirs(self, p):
-        """Make directories and all parents necessary.
-
-        :Arguments:
-            *p*
-                directory path to make
-        """
-        try:
-            os.makedirs(p)
-        except OSError as e:
-            # let slide errors that include directories already existing, but
-            # catch others
-            if e.errno == 17:
-                pass
-            else:
-                raise
 
     @property
     def name(self):
@@ -331,7 +316,7 @@ class Treant(six.with_metaclass(_Treantmeta, object)):
         directory.
 
         """
-        self._makedirs(value)
+        makedirs(value)
         oldpath = self._backend.get_location()
         newpath = os.path.join(value, self.name)
         statefile = os.path.join(newpath,
@@ -341,7 +326,7 @@ class Treant(six.with_metaclass(_Treantmeta, object)):
         self._regenerate(statefile)
 
     @property
-    def basedir(self):
+    def path(self):
         """Absolute path to the Treant's base directory.
 
         This is a convenience property; the same result can be obtained by
@@ -356,3 +341,7 @@ class Treant(six.with_metaclass(_Treantmeta, object)):
 
         """
         return self._backend.filename
+
+    @property
+    def tree(self):
+        return Tree(self.path)

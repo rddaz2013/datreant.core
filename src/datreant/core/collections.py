@@ -155,7 +155,7 @@ class Bundle(object):
                 self._state.append({
                     'uuid': treant.uuid,
                     'treanttype': treant.treanttype,
-                    'abspath': os.path.abspath(treant.basedir)})
+                    'abspath': os.path.abspath(treant.path)})
     
     def remove(self, *members):
         """Remove any number of members from the collection.
@@ -242,18 +242,18 @@ class Bundle(object):
         return names
 
     @property
-    def basedirs(self):
-        """Return a list of member basedirs.
+    def paths(self):
+        """Return a list of member basedir paths.
 
-        Members that can't be found will have basedir ``None``.
+        Members that can't be found will have basedir path ``None``.
 
         :Returns:
             *names*
-                list giving the basedir of each member, in order;
-                members that are missing will have basedir ``None``
+                list giving the basedir path of each member, in order;
+                members that are missing will have basedir path ``None``
 
         """
-        return [member.basedir if member else None for member in self._list()]
+        return [member.path if member else None for member in self._list()]
 
     @property
     def filepath(self):
