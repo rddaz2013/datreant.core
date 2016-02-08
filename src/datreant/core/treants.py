@@ -326,14 +326,18 @@ class Treant(six.with_metaclass(_Treantmeta, TreeMixin)):
         self._regenerate(statefile)
 
     @property
-    def path(self):
+    def abspath(self):
         """Absolute path to the Treant's base directory.
-
-        This is a convenience property; the same result can be obtained by
-        joining :attr:`location` and :attr:`name`.
 
         """
         return self._backend.get_location()
+
+    @property
+    def relpath(self):
+        """Relative path to the Treant's base directory.
+
+        """
+        return self.tree.relpath
 
     @property
     def filepath(self):
@@ -344,4 +348,4 @@ class Treant(six.with_metaclass(_Treantmeta, TreeMixin)):
 
     @property
     def tree(self):
-        return Tree(self.path)
+        return Tree(self.abspath)

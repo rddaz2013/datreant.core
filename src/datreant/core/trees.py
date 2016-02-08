@@ -1,6 +1,7 @@
 import os
 from six import string_types
 import scandir
+from pathlib import Path
 
 from asciitree import LeftAligned
 
@@ -70,13 +71,24 @@ class TreeMixin(object):
 
 
 class BrushMixin(object):
-
     def __str__(self):
-        return self.path
+        return str(self.path)
 
     @property
     def exists(self):
-        return os.path.exists(self.path)
+        return self.path.exists
+
+    @property
+    def path(self):
+        return self._path
+
+    @property
+    def abspath(self):
+        return str(self.path.absolute())
+
+    @property
+    def relpath(self):
+        return str(self.path.relative_to(os.path.abspath('.')))
 
 
 class Tree(TreeMixin, BrushMixin):
@@ -86,10 +98,10 @@ class Tree(TreeMixin, BrushMixin):
 
     def __init__(self, dirpath):
         makedirs(dirpath)
-        self.path = os.path.abspath(dirpath)
+        self._path = Path(os.path.abspath(dirpath))
 
     def __repr__(self):
-        return "<Tree: '{}'>".format(self.path)
+        return "<Tree: '{}'>".format(self.relative)
 
 
 class Leaf(BrushMixin):
@@ -99,7 +111,7 @@ class Leaf(BrushMixin):
 
     def __init__(self, filepath):
         makedirs(os.path.dirname(filepath))
-        self.path = os.path.abspath(filepath)
+        self._path = Path(os.path.abspath(filepath))
 
     def __repr__(self):
-        return "<Leaf: '{}'>".format(self.path)
+        return "<Leaf: '{}'>".format(self.relative)
