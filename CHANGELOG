@@ -22,7 +22,8 @@ API Changes
 
 
 Enhancements
-    
+    * Added ``parents`` property to ``View``
+
 
 Fixes
 

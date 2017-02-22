@@ -439,6 +439,17 @@ class View(CollectionMixin):
         return [member.relpath for member in self]
 
     @property
+    def parents(self):
+        """A View of the parent directories for each member in this View.
+
+        Because a View functions as an ordered set, and some members of this
+        View may share a parent, the View of parents may contain fewer
+        elements than this View.
+        
+        """
+        return View([member.parent for member in self])
+
+    @property
     def bundle(self):
         """Obtain a Bundle of all existing Treants among the Trees and Leaves
         in this View.
