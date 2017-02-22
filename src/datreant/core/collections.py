@@ -445,17 +445,9 @@ class View(CollectionMixin):
         Because a View functions as an ordered set, and some members of this
         View may share a parent, the View of parents may contain fewer
         elements than this View.
-        
+
         """
         return View([member.parent for member in self])
-
-    @property
-    def bundle(self):
-        """Obtain a Bundle of all existing Treants among the Trees and Leaves
-        in this View.
-
-        """
-        return Bundle(self, limbs=self.limbs)
 
     @property
     def exists(self):
@@ -1070,13 +1062,6 @@ class Bundle(CollectionMixin):
             self._searchtime = value
         else:
             raise TypeError("Must give a number or `None` for searchtime")
-
-    @property
-    def view(self):
-        """Obtain a View giving the Tree for each Treant in this Bundle.
-
-        """
-        return View([member.tree for member in self], limbs=self.limbs)
 
     def globfilter(self, pattern):
         """Return a Bundle of members that match by name the given globbing
