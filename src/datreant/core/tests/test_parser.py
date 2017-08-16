@@ -47,3 +47,10 @@ def test_not(terms):
 def test_complex_expr():
     expr = "not food or (leaves and animals)"
     assert parse_selection(expr) == ({'food'}, ['leaves', 'animals'])
+
+
+@pytest.mark.parametrix('char',
+                        type('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\]^_`{|}~'))
+def test_possible_characters(char):
+    sel = parse_selection("food and a{}".format(char))
+    assert isinstance(sel, list)

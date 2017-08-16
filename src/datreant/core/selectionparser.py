@@ -1,4 +1,4 @@
-from pyparsing import (CaselessLiteral, Word, alphanums, quotedString,
+from pyparsing import (CaselessLiteral, Word, printables, quotedString,
                        removeQuotes, operatorPrecedence, opAssoc, stringEnd,
                        ParseException)
 
@@ -61,7 +61,8 @@ class SearchTerm(object):
 and_ = CaselessLiteral("and")
 or_ = CaselessLiteral("or")
 not_ = CaselessLiteral("not")
-searchTerm = Word(alphanums) | quotedString.setParseAction(removeQuotes)
+# first remove matching strings and then parse for printable characters
+searchTerm = quotedString.setParseAction(removeQuotes) | Word(printables)
 searchTerm.setParseAction(SearchTerm)
 searchExpr = operatorPrecedence(searchTerm, [
     (not_, 1, opAssoc.RIGHT, SearchNot),
