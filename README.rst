@@ -2,7 +2,7 @@
 datreant: persistent, pythonic trees for heterogeneous data
 ===========================================================
 
-|docs| |build| |cov|
+|docs| |build| |cov| |win|
 
 In many fields of science, especially those analyzing experimental or
 simulation data, there is often an existing ecosystem of specialized tools and 
@@ -62,4 +62,9 @@ contributing back.
     :alt: Code Coverage
     :scale: 100%
     :target: http://codecov.io/github/datreant/datreant.core?branch=develop
+    
+.. |win| image:: https://ci.appveyor.com/api/project/rddaz2013/datreant-core?svg=true 
+    :alt: WinTest
+    :scale: 100%
+    :target: https://ci.appveyor.com/project/rddaz2013/datreant-core
 
