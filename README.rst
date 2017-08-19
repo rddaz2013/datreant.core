@@ -54,11 +54,11 @@ contributing back.
     :scale: 100%
     :target: http://datreant.readthedocs.org/en/develop/?badge=develop
 
-.. |build| image:: https://travis-ci.org/datreant/datreant.core.svg?branch=develop
+.. |build| image:: https://travis-ci.org/rdaz2013/datreant.core.svg?branch=develop
     :alt: Build Status
     :target: https://travis-ci.org/datreant/datreant.core
 
-.. |cov| image:: http://codecov.io/github/datreant/datreant.core/coverage.svg?branch=develop
+.. |cov| image:: http://codecov.io/github/rdaz2013/datreant.core/coverage.svg?branch=develop
     :alt: Code Coverage
     :scale: 100%
     :target: http://codecov.io/github/datreant/datreant.core?branch=develop
