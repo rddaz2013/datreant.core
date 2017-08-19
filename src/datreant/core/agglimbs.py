@@ -4,13 +4,11 @@ AggLimbs are limbs specifically built for collections, in particular
 limbs but serve as aggregators over collections of them.
 
 """
-import itertools
 import functools
-from six import string_types, with_metaclass
 
 from fuzzywuzzy import process
+from six import string_types, with_metaclass
 
-from . import filesystem
 from . import _AGGTREELIMBS, _AGGLIMBS
 from .collections import Bundle
 from .limbs import Tags, Categories

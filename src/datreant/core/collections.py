@@ -8,19 +8,18 @@ conveniences for Trees and Leaves.
 
 from __future__ import absolute_import
 
-import os
-import functools
-from collections import defaultdict
-
-import multiprocessing as mp
-import glob
 import fnmatch
+import functools
+import glob
+import multiprocessing as mp
+import os
+from collections import defaultdict
 
 from six import string_types
 from six.moves import zip
 
-from . import filesystem
 from . import _AGGLIMBS, _AGGTREELIMBS
+from . import findTreants
 from .trees import Tree, Leaf
 
 
@@ -766,13 +765,13 @@ class Bundle(CollectionMixin):
                 outconts.append(treant)
                 self._cache[treant.uuid] = treant
             elif isinstance(treant, (Leaf, Tree)):
-                tre = filesystem.path2treant(treant.abspath)
+                tre = findTreants.path2treant(treant.abspath)
                 outconts.extend(tre)
             elif os.path.exists(treant):
-                tre = filesystem.path2treant(treant)
+                tre = findTreants.path2treant(treant)
                 outconts.extend(tre)
             elif isinstance(treant, string_types):
-                tre = filesystem.path2treant(*glob.glob(treant))
+                tre = findTreants.path2treant(*glob.glob(treant))
                 outconts.extend(tre)
             else:
                 raise TypeError("'{}' not a valid input "
@@ -918,8 +917,8 @@ class Bundle(CollectionMixin):
 
         paths = {path: members[path] for path in self._memberpaths}
 
-        foxhound = filesystem.Foxhound(self, members['uuid'], paths,
-                                       timeout=self.searchtime)
+        foxhound = findTreants.Foxhound(self, members['uuid'], paths,
+                                        timeout=self.searchtime)
         found = foxhound.fetch(as_treants=False)
 
         if None not in found.values():
@@ -958,8 +957,8 @@ class Bundle(CollectionMixin):
         if findlist:
             paths = {path: members[path]
                      for path in self._memberpaths}
-            foxhound = filesystem.Foxhound(self, findlist, paths,
-                                           timeout=self.searchtime)
+            foxhound = findTreants.Foxhound(self, findlist, paths,
+                                            timeout=self.searchtime)
             foundconts = foxhound.fetch(as_treants=True)
 
             # add to cache, and ensure we get updated paths with a re-add in

@@ -63,8 +63,7 @@ contributing back.
     :scale: 100%
     :target: http://codecov.io/github/datreant/datreant.core?branch=develop
     
-.. |win| image:: https://ci.appveyor.com/api/projects/status/32r7s2skrgm9ubva/rddaz2013/datreant-core?svg=true 
+.. |win| image:: https://ci.appveyor.com/api/projects/status/ervrawg8q8gxhkxk?svg=true
     :alt: WinTest
     :scale: 100%
     :target: https://ci.appveyor.com/project/rddaz2013/datreant-core
-

@@ -2,19 +2,19 @@
 Treants: the organizational units for :mod:`datreant`.
 
 """
-import os
 import functools
-import six
+import os
 from uuid import uuid4
+
+import six
 from pathlib2 import Path
 
-from . import filesystem
+from . import _TREANTS, _TREELIMBS, _LIMBS
+from . import findTreants
+from .backends.statefiles import treantfile, TreantFile
 from .collections import Bundle
 from .trees import Tree
 from .util import makedirs
-
-from .backends.statefiles import treantfile, TreantFile
-from . import _TREANTS, _TREELIMBS, _LIMBS
 
 
 class MultipleTreantsError(Exception):
@@ -160,7 +160,7 @@ class Treant(six.with_metaclass(_Treantmeta, Tree)):
             else:
                 raise
 
-        filename = filesystem.statefilename(self._treanttype, str(uuid4()))
+        filename = findTreants.statefilename(self._treanttype, str(uuid4()))
 
         statefile = os.path.join(treant, filename)
 
@@ -185,7 +185,7 @@ class Treant(six.with_metaclass(_Treantmeta, Tree)):
 
         # convenient to give only name of object (its directory name)
         if os.path.isdir(treant):
-            statefile = filesystem.glob_treant(treant)
+            statefile = findTreants.glob_treant(treant)
 
             # if only one state file, load it; otherwise, complain loudly
             if len(statefile) == 1:
@@ -248,7 +248,7 @@ class Treant(six.with_metaclass(_Treantmeta, Tree)):
         olddir = os.path.dirname(self._backend.filename)
         newdir = os.path.join(os.path.dirname(olddir), name)
         statefile = os.path.join(newdir,
-                                 filesystem.statefilename(
+                                 findTreants.statefilename(
                                      self._treanttype, self.uuid))
 
         os.rename(olddir, newdir)
@@ -308,7 +308,7 @@ class Treant(six.with_metaclass(_Treantmeta, Tree)):
         oldpath = self._backend.get_location()
         newpath = os.path.join(value, self.name)
         statefile = os.path.join(newpath,
-                                 filesystem.statefilename(
+                                 findTreants.statefilename(
                                      self._treanttype, self.uuid))
         os.rename(oldpath, newpath)
         self._regenerate(statefile)

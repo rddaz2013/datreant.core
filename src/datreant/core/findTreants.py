@@ -2,8 +2,8 @@
 Functions and classes for finding Treants in the filesystem.
 
 """
-import os
 import glob
+import os
 import time
 
 import scandir
@@ -144,7 +144,6 @@ class Foxhound(object):
                 instead of paths for *as_treants* == True.
 
         """
-        from .collections import Bundle
 
         results = self._find_Bundle_members()
 
@@ -202,7 +201,7 @@ class Foxhound(object):
 
         return outpaths
 
-    def _find_TreantFile(self):
+    def _find_treantfile(self):
         """Find Treant for a TreantFile.
 
         If a Treant's state file is moved by another process while a
