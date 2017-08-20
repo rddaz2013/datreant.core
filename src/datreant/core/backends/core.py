@@ -80,7 +80,8 @@ class File(object):
                 True if shared lock successfully obtained
         """
         if os.name == 'nt':
-            msvcrt.locking(fd.fileno(), msvcrt.LK_LOCK, 2147483647L)
+            fd.seek(0)
+            msvcrt.locking(fd.fileno(), msvcrt.LK_LOCK, 1)
         else:
             fcntl.lockf(fd, fcntl.LOCK_SH)
 
@@ -102,7 +103,8 @@ class File(object):
                 True if exclusive lock successfully obtained
         """
         if os.name == 'nt':
-            print('')
+            fd.seek(0)
+            msvcrt.locking(fd.fileno(), msvcrt.LK_LOCK, 1)
         else:
             fcntl.lockf(fd, fcntl.LOCK_EX)
 
@@ -125,7 +127,7 @@ class File(object):
                 True if lock removed
         """
         if os.name == 'nt':
-            print('')
+            msvcrt.locking(fd.fileno(), msvcrt.LK_UNLCK, 1)
         else:
             fcntl.lockf(fd, fcntl.LOCK_UN)
 
