@@ -1,8 +1,8 @@
 language: python
 sudo: false
+dist: trusty
 
 python:
-  - "3.5"
   - "3.6"
 
 # whitelist
@@ -14,7 +14,6 @@ branches:
 # install python dependencies
 install:
   - pip install codecov
-  - pip install mock
   - pip install --upgrade pytest
   - pip install pytest-cov
   - pip install pytest-pep8
