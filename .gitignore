@@ -3,3 +3,6 @@
 *.swo
 .idea/
 /.cache/
+/dist/
+/src/datreant.core.egg-info/
+/build/
