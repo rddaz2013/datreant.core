@@ -3,11 +3,13 @@
 """
 
 import os
-import sys
-import fcntl
-import warnings
+
+if os.name == 'nt':
+    import msvcrt
+else:
+    import fcntl
+
 import json
-from functools import wraps
 from contextlib import contextmanager
 
 
@@ -77,7 +79,10 @@ class File(object):
             *success*
                 True if shared lock successfully obtained
         """
-        fcntl.lockf(fd, fcntl.LOCK_SH)
+        if os.name == 'nt':
+            msvcrt.locking(fd.fileno(), msvcrt.LK_LOCK, 2147483647L)
+        else:
+            fcntl.lockf(fd, fcntl.LOCK_SH)
 
         return True
 
@@ -96,7 +101,10 @@ class File(object):
             *success*
                 True if exclusive lock successfully obtained
         """
-        fcntl.lockf(fd, fcntl.LOCK_EX)
+        if os.name == 'nt':
+            print('')
+        else:
+            fcntl.lockf(fd, fcntl.LOCK_EX)
 
         return True
 
@@ -116,7 +124,10 @@ class File(object):
             *success*
                 True if lock removed
         """
-        fcntl.lockf(fd, fcntl.LOCK_UN)
+        if os.name == 'nt':
+            print('')
+        else:
+            fcntl.lockf(fd, fcntl.LOCK_UN)
 
         return True
 
