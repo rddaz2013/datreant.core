@@ -5,18 +5,17 @@ files.
 from __future__ import absolute_import
 
 import os
+from collections import OrderedDict
 from functools import reduce, total_ordering
+from pathlib import PurePosixPath
+
+from asciitree import LeftAligned
+from pathlib2 import Path
 from six import string_types
 
-from collections import OrderedDict
-import scandir
-from pathlib2 import Path
-from asciitree import LeftAligned
-
-from .util import makedirs
-from .manipulators import discover
-from .rsync import rsync
 from . import _TREELIMBS
+from .rsync import rsync
+from .util import makedirs, touch_me
 
 
 @total_ordering
@@ -86,7 +85,7 @@ class Veg(object):
         """Basename for this path.
 
         """
-        return os.path.basename(os.path.abspath(self.abspath))
+        return str(PurePosixPath(os.path.basename(os.path.abspath(self.abspath))))
 
     @property
     def limbs(self):
@@ -126,8 +125,12 @@ class Leaf(Veg):
         """Make file if it doesn't exist.
 
         """
-        self.makedirs()
-        self.path.touch()
+        if os.name == 'nt':
+            self.makedirs()
+            touch_me(str(self.path))
+        else:
+            self.makedirs()
+            self.path.touch()
 
     def make(self):
         """Make the file if it doesn't exit. Equivalent to :meth:`touch`.
@@ -209,7 +212,7 @@ class Tree(Veg):
         def filt(path):
             fullpath = os.path.abspath(os.path.join(self.abspath, path))
 
-            if (os.path.isdir(fullpath) or path.endswith(os.sep) or
+            if (os.path.isdir(fullpath) or path.endswith('/') or path.endswith(os.sep) or
                     (fullpath in self.abspath)):
                 limbs = self._classlimbs | self._limbs
                 return Tree(fullpath, limbs=limbs)
@@ -319,7 +322,7 @@ class Tree(Veg):
         from .collections import View
 
         if self.exists:
-            for root, dirs, files in scandir.walk(self.abspath):
+            for root, dirs, files in os.walk(self.abspath):
                 # remove hidden files
                 out = [Leaf(os.path.join(root, f)) for f in files
                        if f[0] != os.extsep]
@@ -342,7 +345,7 @@ class Tree(Veg):
         if not self.exists:
             raise OSError("Tree doesn't exist in the filesystem")
 
-        for root, dirs, files in scandir.walk(self.abspath):
+        for root, dirs, files in os.walk(self.abspath):
             # remove hidden directories
             out = [Tree(os.path.join(root, d), limbs=self.limbs) for d in dirs
                    if d[0] != os.extsep]
@@ -358,7 +361,7 @@ class Tree(Veg):
 
         if not self.exists:
             raise OSError("Tree doesn't exist in the filesystem")
-        for root, dirs, files in scandir.walk(self.abspath):
+        for root, dirs, files in os.walk(self.abspath):
             outdirs = [Tree(os.path.join(root, d), limbs=self.limbs)
                        for d in dirs if d[0] == os.extsep]
             outdirs.sort()
@@ -427,7 +430,6 @@ class Tree(Veg):
             Wrapped `scandir.walk()` generator yielding `datreant` objects
 
         """
-        from .collections import View
 
         if not self.exists:
             raise OSError("Tree doesn't exist in the filesystem")
@@ -461,7 +463,7 @@ class Tree(Veg):
         tree = OrderedDict()
         rootdir = self.abspath.rstrip(os.sep)
         start = rootdir.rfind(os.sep) + 1
-        for path, dirs, files in scandir.walk(rootdir):
+        for path, dirs, files in os.walk(rootdir):
             folders = ["{}/".format(x) for x in path[start:].split(os.sep)]
 
             parent = reduce(dict.get, folders[:-1], tree)

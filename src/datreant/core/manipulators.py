@@ -2,9 +2,9 @@
 User-level functions for manipulating Treants.
 
 """
-import os
-import scandir
 import fnmatch
+import os
+
 from six.moves import range
 
 from . import _TREANTS
@@ -45,7 +45,7 @@ def discover(dirpath='.', depth=None, treantdepth=None):
     startdepth = len(dirpath.split(os.sep))
     treantdirs = set()
 
-    for root, dirs, files in scandir.walk(dirpath):
+    for root, dirs, files in os.walk(dirpath):
         for treanttype in _TREANTS:
             outnames = fnmatch.filter(files,
                                       "{}.*.json".format(treanttype))

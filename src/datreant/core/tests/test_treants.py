@@ -2,13 +2,13 @@
 
 """
 
-import datreant.core as dtr
-import pytest
-import mock
 import os
-import py
+from unittest.mock import patch
 
-from . import test_collections
+import py
+import pytest
+
+import datreant.core as dtr
 from .test_trees import TestTree
 
 
@@ -100,7 +100,7 @@ class TestTreant(TestTree):
 
     def test_gen_OSError(self, tmpdir, treantclass):
         with tmpdir.as_cwd():
-            with mock.patch('os.makedirs') as mp:
+            with patch('os.makedirs') as mp:
                 mp.sideeffect = OSError(os.errno.ENOSPC, 'Mock - disk full')
                 with pytest.raises(OSError) as error:
                     t = treantclass('new')
@@ -108,7 +108,7 @@ class TestTreant(TestTree):
 
     def test_gen_OSError13(self, tmpdir, treantclass):
         with tmpdir.as_cwd():
-            with mock.patch('os.makedirs') as mp:
+            with patch('os.makedirs') as mp:
                 mp.sideeffect = OSError(os.errno.EACCES, 'Mock - disk full')
                 with pytest.raises(OSError) as error:
                     t = treantclass('new')

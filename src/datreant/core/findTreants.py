@@ -6,8 +6,6 @@ import glob
 import os
 import time
 
-import scandir
-
 
 def statefilename(treanttype, uuid):
     """Return state file name given the type of treant and its uuid.

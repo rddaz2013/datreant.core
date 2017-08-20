@@ -2,16 +2,14 @@
 
 """
 
+import json
 import os
+from contextlib import contextmanager
 
 if os.name == 'nt':
     import msvcrt
 else:
     import fcntl
-
-import json
-from contextlib import contextmanager
-
 
 class File(object):
     """Generic File object base class. Implements file locking and reloading
@@ -80,8 +78,7 @@ class File(object):
                 True if shared lock successfully obtained
         """
         if os.name == 'nt':
-            fd.seek(0)
-            msvcrt.locking(fd.fileno(), msvcrt.LK_LOCK, 1)
+            msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
         else:
             fcntl.lockf(fd, fcntl.LOCK_SH)
 
@@ -103,8 +100,7 @@ class File(object):
                 True if exclusive lock successfully obtained
         """
         if os.name == 'nt':
-            fd.seek(0)
-            msvcrt.locking(fd.fileno(), msvcrt.LK_LOCK, 1)
+            msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
         else:
             fcntl.lockf(fd, fcntl.LOCK_EX)
 
@@ -127,7 +123,7 @@ class File(object):
                 True if lock removed
         """
         if os.name == 'nt':
-            msvcrt.locking(fd.fileno(), msvcrt.LK_UNLCK, 1)
+            msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
         else:
             fcntl.lockf(fd, fcntl.LOCK_UN)
 
@@ -157,7 +153,7 @@ class File(object):
         """
         # close file descriptor for locks
         os.close(self.fd)
-        self.fd = None
+        # self.fd = None
 
     def _apply_shared_lock(self):
         """Apply shared lock.
@@ -333,7 +329,13 @@ class FileSerial(File):
         self.handle = self._open_file_w()
         self._serialize(self._state, self.handle)
         self.handle.close()
-        os.rename(self._writebuffer, self.filename)
+
+        if os.name == 'nt':
+            if os.path.isfile(self.filename):
+                os.remove(self.filename)
+            os.rename(self._writebuffer, self.filename)
+        else:
+            os.rename(self._writebuffer, self.filename)
 
     def _serialize(self, state, handle):
         """Serialize full state to open file handle.

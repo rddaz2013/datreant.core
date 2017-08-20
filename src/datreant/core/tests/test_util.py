@@ -1,5 +1,6 @@
-import mock
 import os
+from unittest.mock import patch
+
 import pytest
 
 import datreant.core as dtr
@@ -24,7 +25,7 @@ class TestMakedirs(object):
         # mock a disk full error
         # and make sure it gets propagated through properly
         with tmpdir.as_cwd():
-            with mock.patch('os.makedirs') as mp:
+            with patch('os.makedirs') as mp:
                 mp.side_effect = OSError(os.errno.ENOSPC, 'Mock - disk full')
                 # check the specific error code
                 # ie check we don't mangle it enroute

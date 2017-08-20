@@ -2,12 +2,13 @@
 
 """
 
-import pytest
 import os
-import py
+from pathlib import PurePosixPath
+
+import pytest
 
 import datreant.core as dtr
-from datreant.core import Veg, Leaf, Tree, Treant
+from datreant.core import Veg, Leaf, Tree
 
 
 class TestVeg(object):
@@ -22,7 +23,7 @@ class TestVeg(object):
             yield v
 
     def test_str(self, veg):
-        assert str(veg) == os.path.join(os.getcwd(), self.name)
+        assert PurePosixPath(str(veg)) == PurePosixPath(os.path.join(os.getcwd(), self.name.replace('/', '\\')))
 
     def test_hash(self, veg):
         # hases are based only on abspath
@@ -35,10 +36,10 @@ class TestVeg(object):
         assert not veg.exists
 
     def test_abspath(self, veg):
-        assert veg.abspath == os.path.join(os.getcwd(), self.name)
+        assert PurePosixPath(veg.abspath) == PurePosixPath(os.path.join(os.getcwd(), self.name.replace('/', '\\')))
 
     def test_relpath(self, veg):
-        assert veg.relpath == self.name
+        assert PurePosixPath(veg.relpath) == PurePosixPath(self.name.replace('/', '\\'))
 
     def test_parent(self, veg):
         p = veg.parent

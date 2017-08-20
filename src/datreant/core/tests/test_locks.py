@@ -2,9 +2,9 @@
 
 """
 
-import string
 import multiprocessing as mp
-import time
+import sys
+
 import pytest
 
 from datreant.core import Treant
@@ -22,6 +22,8 @@ def init_treant(tmpdir, tags):
     return tf
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="does not run on windows")
 class TestTreantFile:
 
     @pytest.fixture
