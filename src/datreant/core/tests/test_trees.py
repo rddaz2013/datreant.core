@@ -23,7 +23,11 @@ class TestVeg(object):
             yield v
 
     def test_str(self, veg):
-        assert PurePosixPath(str(veg)) == PurePosixPath(os.path.join(os.getcwd(), self.name.replace('/', '\\')))
+        if os.name == 'nt':
+            name_os = self.name.replace('/', '\\')
+        else:
+            name_os = self.name
+        assert PurePosixPath(str(veg)) == PurePosixPath(os.path.join(os.getcwd(), name_os))
 
     def test_hash(self, veg):
         # hases are based only on abspath
@@ -36,10 +40,18 @@ class TestVeg(object):
         assert not veg.exists
 
     def test_abspath(self, veg):
-        assert PurePosixPath(veg.abspath) == PurePosixPath(os.path.join(os.getcwd(), self.name.replace('/', '\\')))
+        if os.name == 'nt':
+            name_os = self.name.replace('/', '\\')
+        else:
+            name_os = self.name
+        assert PurePosixPath(veg.abspath) == PurePosixPath(os.path.join(os.getcwd(), name_os))
 
     def test_relpath(self, veg):
-        assert PurePosixPath(veg.relpath) == PurePosixPath(self.name.replace('/', '\\'))
+        if os.name == 'nt':
+            name_os = self.name.replace('/', '\\')
+        else:
+            name_os = self.name
+        assert PurePosixPath(veg.relpath) == PurePosixPath(name_os)
 
     def test_parent(self, veg):
         p = veg.parent

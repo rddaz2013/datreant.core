@@ -14,7 +14,7 @@ import datreant.core as dtr
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="does not run on windows")
 def test_sync_local(tmpdir):
-    '''Test that syncronization works locally'''
+    """Test that syncronization works locally"""
     with tmpdir.as_cwd():
         sequoia = dtr.Tree("sequoia").makedirs()
         sequoia2 = dtr.Tree("sequoia2").makedirs()

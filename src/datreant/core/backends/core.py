@@ -11,6 +11,7 @@ if os.name == 'nt':
 else:
     import fcntl
 
+
 class File(object):
     """Generic File object base class. Implements file locking and reloading
     methods.
@@ -258,6 +259,7 @@ class FileSerial(File):
     """File object base class for serialization formats, such as JSON.
 
     """
+
     @property
     def _writebuffer(self):
         wbuffer = ".{}.buffer".format(os.path.basename(self.filename))

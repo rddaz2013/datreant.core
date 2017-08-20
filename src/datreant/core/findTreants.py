@@ -143,7 +143,7 @@ class Foxhound(object):
 
         """
 
-        results = self._find_Bundle_members()
+        results = self._find_bundle_members()
 
         if as_treants:
             conts = path2treant(*results.values())
@@ -213,7 +213,7 @@ class Foxhound(object):
         """
         pass
 
-    def _find_Bundle_members(self):
+    def _find_bundle_members(self):
         """Find Treants that are members of a Bundle.
 
         For finding Bundle members, the Foxhound begins by looking for
